@@ -9,7 +9,7 @@
   var doc = document.documentElement;
   var ROOT = doc.getAttribute("data-root") || "";
   var TRIPS = window.RAWASI_TRIPS || [];
-  var SITE = window.RAWASI_SITE || { links: {}, faq: [], guides: [], packing: [], refund: [] };
+  var SITE = window.RAWASI_SITE || { links: {}, faqGroups: [], founders: [], testimonials: [] };
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- helpers ---------- */
@@ -62,7 +62,11 @@
       else if (L[k]) a.href = L[k];
       if (/^https?:/.test(a.href)) { a.target = "_blank"; a.rel = "noopener"; }
     });
-    $$("[data-text]").forEach(function (el) { var v = (SITE.links || {})[el.getAttribute("data-text")]; if (v) el.textContent = v; });
+    $$("[data-text]").forEach(function (el) {
+      var k = el.getAttribute("data-text"), L = SITE.links || {};
+      var v = k === "phone" ? (L.phoneDisplay || L.phone) : L[k];
+      if (v) el.textContent = v;
+    });
     $$("[data-year]").forEach(function (el) { el.textContent = new Date().getFullYear(); });
   }
 
@@ -156,9 +160,9 @@
   /* ---------- trip cards ---------- */
   function tripCard(t, i) {
     var s = statusOf(t), past = isPast(t);
-    var price = t.price ? '<span class="trip-card__price">' + money(t.price) + " <small>/ person</small></span>" : '<span class="trip-card__price muted">' + esc(t.groupSize || "") + "</span>";
+    var price = t.price && !past ? '<span class="trip-card__price">' + money(t.price) + " <small>/ person</small></span>" : '<span class="trip-card__price muted">' + esc(t.duration || t.groupSize || "") + "</span>";
     return '<a class="card trip-card reveal' + (past ? " is-past" : "") + '" style="--d:' + (i * 0.08) + 's" href="' + url(t.page) + '">' +
-      '<div class="trip-card__media"><img src="' + url(t.image) + '" alt="' + esc(t.shortTitle) + '" loading="lazy" width="1800" height="1200">' +
+      '<div class="trip-card__media"><img src="' + url(t.image) + '" alt="' + esc(t.imageAlt || t.shortTitle) + '" loading="lazy" width="1800" height="1200">' +
       '<span class="badge badge--' + s.key + '">' + s.label + "</span></div>" +
       '<div class="trip-card__body">' +
       '<span class="trip-card__meta">' + esc(t.dates) + " · " + esc(t.shortLocation || t.location) + "</span>" +
@@ -221,24 +225,24 @@
     var s = statusOf(t);
     el.innerHTML =
       '<article class="featured reveal">' +
-      '<div class="featured__media"><img src="' + url(t.image) + '" alt="' + esc(t.shortTitle) + '" loading="lazy"><span class="badge badge--' + s.key + '">' + s.label + "</span></div>" +
+      '<div class="featured__media"><img src="' + url(t.image) + '" alt="' + esc(t.imageAlt || t.shortTitle) + '" loading="lazy"><span class="badge badge--' + s.key + '">' + s.label + "</span></div>" +
       '<div class="featured__body">' +
-      '<span class="eyebrow">Next trip · ' + esc(t.eyebrow || "") + "</span>" +
+      '<span class="eyebrow">' + esc(t.eyebrow || "") + "</span>" +
       '<h3 class="featured__title">' + esc(t.shortTitle) + "</h3>" +
-      '<p class="muted">' + esc(t.summary) + "</p>" +
+      '<p class="muted">' + esc(t.dates) + " · " + esc(t.duration) + "</p>" +
+      '<p class="muted" style="margin-top:8px">' + esc(t.cardSummary || t.summary) + "</p>" +
       '<div class="featured__facts">' +
-      '<div><div class="fact__label">Dates</div><div class="fact__value">' + esc(t.dates) + "</div></div>" +
+      '<div><div class="fact__label">Length</div><div class="fact__value">' + esc(t.duration) + "</div></div>" +
       '<div><div class="fact__label">Group</div><div class="fact__value">' + esc(t.groupSize) + "</div></div>" +
       '<div><div class="fact__label">Where</div><div class="fact__value">' + esc(t.shortLocation) + "</div></div>" +
-      (t.price ? '<div><div class="fact__label">From</div><div class="fact__value fact__value--price">' + money(t.price) + "</div></div>" : "") +
+      (t.price ? '<div><div class="fact__label">' + esc(t.priceLabel || "Price") + '</div><div class="fact__value fact__value--price">' + money(t.price) + "</div></div>" : "") +
       "</div>" +
-      '<div class="btn-row"><a class="btn" href="' + url(t.registerUrl || t.page) + '">Reserve your spot</a><a class="link-more" href="' + url(t.page) + '">Learn more</a></div>' +
+      '<div class="btn-row"><a class="btn" href="' + url(t.page) + '">View the retreat</a>' + (t.registerUrl ? '<a class="link-more" href="' + url(t.registerUrl) + '">Reserve your spot</a>' : "") + "</div>" +
       "</div></article>";
   }
 
   /* ---------- FAQ accordion ---------- */
-  function faqHTML(ids) {
-    var list = ids ? ids.map(function (id) { return SITE.faq.filter(function (f) { return f.id === id; })[0]; }).filter(Boolean) : SITE.faq;
+  function faqHTML(list) {
     return '<div class="accordion">' + list.map(function (f, i) {
       var id = "faq-" + f.id + "-" + Math.random().toString(36).slice(2, 7);
       return '<div class="acc reveal" style="--d:' + Math.min(i * 0.04, 0.3) + 's">' +
@@ -247,6 +251,7 @@
         '<div class="acc__panel" id="' + id + '" role="region" aria-labelledby="' + id + '-b" hidden><div><div class="acc__inner">' + f.a + "</div></div></div></div>";
     }).join("") + "</div>";
   }
+  function faqGroup(id) { return (SITE.faqGroups || []).filter(function (g) { return g.id === id; })[0]; }
 
   function initAccordions(ctx) {
     $$(".acc__btn", ctx).forEach(function (btn) {
@@ -269,28 +274,31 @@
 
   function initFAQ() {
     $$("[data-faq]").forEach(function (el) {
-      var ids = el.getAttribute("data-faq");
-      el.innerHTML = faqHTML(ids ? ids.split(",") : null);
+      var id = el.getAttribute("data-faq");
+      var groups = id ? [faqGroup(id)].filter(Boolean) : (SITE.faqGroups || []);
+      el.innerHTML = groups.map(function (g) {
+        return '<section class="faq-group" id="' + esc(g.id) + '">' +
+          (id ? "" : '<div class="faq-group__head reveal"><h2 class="subtitle">' + esc(g.title) + '</h2><p class="muted">' + esc(g.subtitle || "") + "</p></div>") +
+          faqHTML(g.faq) + "</section>";
+      }).join("");
     });
   }
 
   /* ---------- packing checklist ---------- */
-  function packingHTML(extras, key) {
+  function packingHTML(items, key) {
     var check = icon("check").replace('stroke-width="1.8"', 'stroke-width="3.2"').replace('stroke="currentColor"', 'stroke="#1a1410"');
-    function item(name, i, grp) {
-      var id = "pk-" + key + "-" + grp + i;
-      return '<label class="pack-item" for="' + id + '"><input type="checkbox" id="' + id + '" data-pack="' + esc(grp + ":" + name) + '"><span class="pack-item__box">' + check + "</span><span>" + esc(name) + "</span></label>";
-    }
-    var html = '<div class="packing" data-packing-list="' + key + '"><h4>Essentials</h4>' + SITE.packing.map(function (n, i) { return item(n, i, "base"); }).join("");
-    if (extras && extras.length) html += "<h4>Winter extras ❄︎</h4>" + extras.map(function (n, i) { return item(n, i, "extra"); }).join("");
-    return html + '<p class="packing__progress" aria-live="polite"></p></div>';
+    return '<div class="packing" data-packing-list="' + key + '">' + items.map(function (name, i) {
+      var id = "pk-" + key + "-" + i;
+      return '<label class="pack-item" for="' + id + '"><input type="checkbox" id="' + id + '" data-pack="' + esc(name) + '"><span class="pack-item__box">' + check + "</span><span>" + esc(name) + "</span></label>";
+    }).join("") + '<p class="packing__progress" aria-live="polite"></p></div>';
   }
   function initPacking(ctx) {
     $$("[data-packing]", ctx).forEach(function (el) {
       if (el._packed) return; el._packed = true;
-      var trip = findTrip(doc.getAttribute("data-trip") || "") || featuredTrip();
-      var key = trip ? trip.slug : "general";
-      el.innerHTML = packingHTML(trip && trip.packingExtras, key);
+      var trip = findTrip(doc.getAttribute("data-trip") || "");
+      if (!trip || !trip.packing) return;
+      var key = trip.slug;
+      el.innerHTML = packingHTML(trip.packing, key);
       var boxes = $$("input", el), prog = $(".packing__progress", el), skey = "rawasi-pack-" + key;
       var saved = {}; try { saved = JSON.parse(store(skey) || "{}"); } catch (e) {}
       function update() {
@@ -301,38 +309,37 @@
         b.checked = !!saved[b.getAttribute("data-pack")];
         b.addEventListener("change", function () { saved[b.getAttribute("data-pack")] = b.checked; store(skey, JSON.stringify(saved)); update(); });
       });
-      if (trip && trip.packingExtras && trip.packingExtras.length) {
-        var note = document.createElement("p");
-        note.className = "packing__progress";
-        note.textContent = "Showing the list for " + trip.shortTitle + ".";
-        el.insertBefore(note, el.firstChild);
-      }
       update();
     });
   }
 
-  function refundHTML() {
-    return '<div class="refund">' + SITE.refund.map(function (r) {
-      return '<div class="refund__item"><div class="refund__when">' + esc(r.when) + '</div><div class="refund__val">' + esc(r.refund) + "</div></div>";
-    }).join("") + '</div><p class="refund-note">' + esc(SITE.refundNote) + "</p>";
+  function policyHTML(items) {
+    return '<div class="policy">' + items.map(function (r) {
+      return '<div class="policy__item"><div class="policy__when">' + esc(r.when) + '</div><div class="policy__text">' + esc(r.text) + "</div></div>";
+    }).join("") + "</div>";
   }
-  function initRefund(ctx) { $$("[data-refund]", ctx).forEach(function (el) { el.innerHTML = refundHTML(); }); }
+
+  /* ---------- testimonials ---------- */
+  function testimonialsHTML() {
+    return '<div class="testimonials">' + (SITE.testimonials || []).map(function (q, i) {
+      return '<figure class="testimonial reveal" style="--d:' + i * 0.08 + 's"><blockquote>“' + esc(q.quote) + '”</blockquote>' +
+        '<figcaption><img src="' + url(q.image) + '" alt="' + esc(q.name) + '" loading="lazy" width="56" height="56"><span><strong>' + esc(q.name) + "</strong>" + esc(q.trip) + "</span></figcaption></figure>";
+    }).join("") + "</div>";
+  }
+  function initTestimonials() { $$("[data-testimonials]").forEach(function (el) { el.innerHTML = testimonialsHTML(); }); }
+
 
   /* ---------- guides ---------- */
+  function guideHTML(g) {
+    return '<div class="guide"><img src="' + url(g.image) + '" alt="' + esc(g.name) + '" loading="lazy"><div><h3>' + esc(g.name) +
+      '</h3><div class="guide__role">' + esc(g.role) + "</div><p>" + esc(g.bio) + "</p></div></div>";
+  }
   function initGuides() {
     $$("[data-guides]").forEach(function (el) {
-      var style = el.getAttribute("data-guides");
-      if (style === "cards") {
-        el.innerHTML = SITE.guides.map(function (g, i) {
-          return '<div class="card guide-card reveal" style="--d:' + i * 0.08 + 's"><img src="' + url(g.image) + '" alt="' + esc(g.name) + '" loading="lazy">' +
-            "<h3>" + esc(g.name) + '</h3><div class="guide__role">' + esc(g.role) + "</div><p>" + esc(g.bio) + "</p></div>";
-        }).join("");
-      } else {
-        el.innerHTML = SITE.guides.map(function (g) {
-          return '<div class="guide"><img src="' + url(g.image) + '" alt="' + esc(g.name) + '" loading="lazy"><div><h3>' + esc(g.name) +
-            '</h3><div class="guide__role">' + esc(g.role) + "</div><p>" + esc(g.bio) + "</p></div></div>";
-        }).join("");
-      }
+      el.innerHTML = (SITE.founders || []).map(function (g, i) {
+        return '<div class="card guide-card reveal" style="--d:' + i * 0.08 + 's"><img src="' + url(g.image) + '" alt="' + esc(g.name) + '" loading="lazy">' +
+          "<h3>" + esc(g.name) + '</h3><div class="guide__role">' + esc(g.role) + "</div><p>" + esc(g.bio) + "</p></div>";
+      }).join("");
     });
   }
 
@@ -377,13 +384,19 @@
   }
 
   /* ---------- trip detail page ---------- */
+  function factsHTML(list) {
+    return '<dl class="facts">' + list.map(function (d) {
+      return '<div><dt class="fact__label">' + esc(d.label) + '</dt><dd class="fact__value">' + esc(d.value) + "</dd></div>";
+    }).join("") + "</dl>";
+  }
   function renderTripPage(main, t) {
     var s = statusOf(t), past = isPast(t) || t.status === "soldout";
+    var L = SITE.links || {};
     var h = "";
 
     // Hero
     h += '<section class="hero hero--trip"><div class="hero__media" data-parallax="0.25">' +
-      '<img src="' + url(t.heroImage || t.image) + '" alt="" fetchpriority="high">' +
+      '<img src="' + url(t.heroImage || t.image) + '" alt="' + esc(t.heroAlt || "") + '" fetchpriority="high">' +
       (t.heroVideo ? '<video data-hero-video autoplay muted loop playsinline preload="metadata" poster="' + url(t.heroImage || t.image) + '"><source src="' + url(t.heroVideo) + '" type="video/mp4"></video>' : "") +
       '</div><div class="hero__content">' +
       '<span class="badge badge--inline badge--' + s.key + '" style="background:rgba(255,255,255,.88);color:#1d1d1f">' + s.label + "</span>" +
@@ -398,9 +411,12 @@
 
     // Overview
     h += '<section id="overview" class="reveal"><span class="eyebrow">' + (past ? "Recap" : "Overview") + "</span>" +
-      '<h2>' + esc(t.headline || (past ? "We came as strangers. We left as brothers." : "Step into the wild.")) + "</h2>" +
+      (past ? "<h2>" + esc(t.headline) + "</h2>" : "") +
       '<p class="lead">' + esc(t.summary) + "</p>" +
-      '<div class="hero-meta" style="margin-top:20px">' + (t.tags || []).map(function (x) { return '<span class="chip chip--light">' + esc(x) + "</span>"; }).join("") + "</div></section>";
+      '<div class="hero-meta" style="margin-top:20px">' + (t.tags || []).map(function (x) { return '<span class="chip chip--light">' + esc(x) + "</span>"; }).join("") + "</div>" +
+      (t.quote ? '<p class="trip-quote">“' + esc(t.quote.text) + "”<cite>" + esc(t.quote.cite) + "</cite></p>" : "") + "</section>";
+
+    if (t.details) h += '<section id="details" class="reveal"><span class="eyebrow">At a glance</span><h2>Trip Details</h2>' + factsHTML(t.details) + "</section>";
 
     if (past && t.stats) {
       h += '<section class="reveal"><div class="stats" style="padding:32px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">' + t.stats.map(function (st) {
@@ -409,8 +425,8 @@
     }
 
     if (!past && t.highlights) {
-      h += '<section><h2 class="reveal">Highlights</h2><div class="highlights">' + t.highlights.map(function (x, i) {
-        return '<div class="highlight reveal" style="--d:' + i * 0.05 + 's"><span class="highlight__icon gold">' + icon(x.icon, "icon") + "</span><h3>" + esc(x.title) + "</h3><p>" + esc(x.text) + "</p></div>";
+      h += '<section><span class="eyebrow reveal">What you\'ll do</span><h2 class="reveal">' + esc(t.highlightsTitle || "Highlights") + '</h2><div class="highlights">' + t.highlights.map(function (x, i) {
+        return '<div class="highlight reveal" style="--d:' + i * 0.05 + 's"><span class="highlight__icon gold">' + icon(x.icon, "icon") + "</span><h3>" + esc(x.title) + "</h3>" + (x.text ? "<p>" + esc(x.text) + "</p>" : "") + "</div>";
       }).join("") + "</div></section>";
     }
 
@@ -420,60 +436,90 @@
       }).join("") + "</div></section>";
     }
 
-    if (past && (t.gallery || t.youtube)) {
-      h += '<section id="gallery"><h2 class="reveal">Photos & video</h2>' +
+    function gallery() {
+      return '<section id="photos"><h2 class="reveal">' + esc(t.galleryTitle || "Photos") + "</h2>" +
         (t.youtube ? '<div style="margin-bottom:12px">' + videoHTML(t.youtube, "Watch the trip film", t.gallery && t.gallery[0] ? t.gallery[0].src : t.image) + "</div>" : "") +
         '<div class="gallery reveal">' + (t.gallery || []).map(function (g) {
           return '<button data-lightbox aria-label="View photo: ' + esc(g.alt) + '"><img src="' + url(g.src) + '" alt="' + esc(g.alt) + '" loading="lazy"></button>';
         }).join("") + "</div></section>";
     }
+    if (past && (t.gallery || t.youtube)) h += gallery();
+
+    if (past && (t.intro || t.about)) {
+      h += '<section class="reveal"><span class="eyebrow">The retreat</span><h2>' + esc(t.about ? t.about.title : "About the retreat") + "</h2>" +
+        (t.intro ? '<p class="muted">' + esc(t.intro) + "</p>" : "") + (t.about ? '<p class="muted" style="margin-top:14px">' + esc(t.about.text) + "</p>" : "") + "</section>";
+    }
 
     // Included
-    h += '<section class="reveal"><h2>What’s included</h2><ul class="check-list">' + t.included.map(function (x) {
-      return "<li><strong>" + esc(x.title) + "</strong><span>" + esc(x.text) + "</span></li>";
-    }).join("") + "</ul>" + (past ? "" : '<p class="muted" style="margin-top:12px;font-size:15px">You bring your own backpacking gear — or rent from us below.</p>') + "</section>";
+    h += '<section id="included"><span class="eyebrow reveal">' + (past ? "What was included" : "All-inclusive") + '</span><h2 class="reveal">' + esc(t.includedTitle || "What’s included") + '</h2><div class="included">' + t.included.map(function (x, i) {
+      return '<div class="included__item reveal" style="--d:' + Math.min(i * 0.05, 0.3) + 's">' +
+        (x.image ? '<img class="included__img" src="' + url(x.image) + '" alt="' + esc(x.imageAlt || "") + '" loading="lazy">' : "") +
+        "<h3>" + esc(x.title) + "</h3>" +
+        (x.text ? "<p>" + esc(x.text) + "</p>" : "") +
+        (x.items ? '<ul class="check-list check-list--sm">' + x.items.map(function (it) { return "<li><span>" + esc(it) + "</span></li>"; }).join("") + "</ul>" : "") +
+        (x.note ? '<p class="included__note">' + esc(x.note) + "</p>" : "") + "</div>";
+    }).join("") + "</div></section>";
+
+    if (!past && t.packing) {
+      h += '<section id="packing" class="reveal"><h2>' + esc(t.packingTitle || "What to pack") + '</h2><p class="muted">Tap to tick items off — your list is saved on this device.</p><div data-packing></div>' +
+        (t.packingNote ? '<p class="muted" style="margin-top:12px">' + esc(t.packingNote) + "</p>" : "") + "</section>";
+    }
+
+    if (!past) h += '<section id="testimonials"><span class="eyebrow reveal">Testimonials</span><h2 class="reveal">' + esc(t.testimonialsTitle || "Testimonials") + "</h2><div data-testimonials></div></section>";
 
     // Itinerary
-    h += '<section id="itinerary"><h2 class="reveal">Itinerary</h2>' + (t.itineraryNote ? '<span class="note reveal">⏳ ' + esc(t.itineraryNote) + "</span>" : "") +
+    h += '<section id="itinerary"><span class="eyebrow reveal">Day by day</span><h2 class="reveal">' + esc(t.itineraryTitle || "Itinerary") + "</h2>" + (t.itineraryNote ? '<span class="note reveal">⏳ ' + esc(t.itineraryNote) + "</span>" : "") +
       '<div class="timeline">' + t.itinerary.map(function (d, i) {
         return '<div class="timeline__item reveal" style="--d:' + i * 0.06 + 's"><span class="timeline__dot"></span>' +
-          '<div class="timeline__day">' + esc(d.day) + " · " + esc(d.date) + '</div><h3 class="timeline__title">' + esc(d.title) + "</h3>" +
-          '<ul class="timeline__items">' + d.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+          '<div class="timeline__day">' + esc(d.day) + (d.date && d.date !== d.title ? " · " + esc(d.date) : "") + '</div><h3 class="timeline__title">' + esc(d.title) + "</h3>" +
+          (d.text ? '<p class="timeline__text">' + esc(d.text) + "</p>" : "") +
+          (d.items ? '<ul class="timeline__items">' + d.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
       }).join("") + "</div></section>";
 
-    // Guides
-    h += '<section><h2 class="reveal">Your guides</h2><div class="guides reveal" data-guides></div></section>';
-
-    if (!past) {
-      h += '<section id="packing" class="reveal"><h2>What to pack</h2><p class="muted">Tap to tick items off — your list is saved on this device.</p><div data-packing></div></section>';
-      h += '<section id="faq"><h2 class="reveal">Questions</h2><div data-faq="' + (t.faqIds || []).join(",") + '"></div><p style="margin-top:20px"><a class="link-more" href="' + url("faq.html") + '">See all FAQs</a></p></section>';
-      h += '<section id="refund" class="reveal"><h2>Refund policy</h2><div data-refund></div></section>';
+    if (t.fit) {
+      h += '<section id="fit" class="reveal"><span class="eyebrow">Who it\'s for</span><h2>' + esc(t.fit.title) + '</h2><p class="lead">' + esc(t.fit.text) + "</p>" +
+        '<div class="fit"><div class="fit__card"><h3>' + esc(t.fit.readyTitle) + "</h3><p>" + esc(t.fit.ready) + '</p></div><div class="fit__card"><h3>' + esc(t.fit.expectTitle) + "</h3>" + factsHTML(t.fit.expect) + "</div></div></section>";
     }
+
+    if (past) h += '<section id="testimonials"><h2 class="reveal">' + esc(t.testimonialsTitle || "Testimonials") + "</h2><div data-testimonials></div></section>";
+
+    // Guides
+    if (t.guides) h += '<section id="guides"><span class="eyebrow reveal">Who leads you</span><h2 class="reveal">' + esc(t.guidesTitle || "Your Guides") + '</h2><div class="guides reveal">' + t.guides.map(guideHTML).join("") + "</div></section>";
+
+    if (!past && t.gallery) h += gallery();
+
+    if (!past && t.policy) h += '<section id="commitment" class="reveal"><span class="eyebrow">Before you book</span><h2>' + esc(t.policyTitle || "Refund policy") + "</h2>" + policyHTML(t.policy) + "</section>";
+
+    if (t.faqGroup) h += '<section class="reveal"><p><a class="link-more" href="' + url("faq.html") + "#" + esc(t.faqGroup) + '">' + (past ? "Read this trip's FAQ" : "See the FAQ") + "</a></p></section>";
 
     h += "</div>"; // trip-main
 
     // Aside
+    var call = '<p class="price-card__fine">Questions? Text or call us at <a href="tel:' + esc(L.phone) + '">' + esc(L.phoneDisplay || L.phone) + "</a></p>";
     if (past) {
       var next = featuredTrip();
-      h += '<aside><div class="price-card soldout-cta reveal"><span class="badge badge--inline badge--soldout">Sold out</span>' +
-        '<h3 style="font-size:24px;margin:0 0 8px">This trip has ended.</h3><p class="muted">' + (next && next !== t ? "Join the next one: " + esc(next.shortTitle) + ", " + esc(next.dates) + "." : "Join the WhatsApp group to hear about the next trip first.") + "</p>" +
-        (next && next !== t ? '<a class="btn btn--block" href="' + url(next.page) + '">Join the next one</a>' : "") +
-        '<a class="btn btn--ghost btn--block" style="margin-top:10px" data-link="whatsapp" href="' + SITE.links.whatsapp + '">Join WhatsApp group</a></div></aside>';
+      h += '<aside><div class="price-card soldout-cta reveal"><span class="badge badge--inline badge--soldout">' + s.label + "</span>" +
+        '<h3 style="font-size:24px;margin:0 0 8px">' + esc(t.statusNote || "This trip has ended.") + '</h3><p class="muted">' + (next && next !== t ? "Join the next one: " + esc(next.shortTitle) + ", " + esc(next.dates) + "." : "Join the WhatsApp group to hear about the next trip first.") + "</p>" +
+        (next && next !== t ? '<a class="btn btn--block" href="' + url(next.page) + '">View the retreat</a>' : "") +
+        '<a class="btn btn--ghost btn--block" style="margin-top:10px" data-link="whatsapp" href="' + L.whatsapp + '">Join our WhatsApp community</a></div></aside>';
     } else {
       h += '<aside id="reserve"><div class="price-card reveal" data-price-card>' +
         '<span class="badge badge--inline badge--' + s.key + '">' + s.label + "</span>" +
-        '<div style="margin-top:16px" class="price-card__label">Trip price</div>' +
+        '<div style="margin-top:16px" class="price-card__label">' + esc(t.eyebrow) + "</div>" +
         '<div class="price-card__price">' + money(t.price) + "</div>" +
-        '<div class="price-card__note">' + esc(t.priceNote || "per person") + "</div>" +
-        (t.rentals && t.rentals.length ? '<h3>Gear rental add-ons</h3><p class="price-card__sub">Don’t have gear? Rent ours. Book at least 5 days before the trip.</p>' +
+        '<div class="price-card__tag">' + esc(t.priceLabel || "per person") + "</div>" +
+        '<div class="price-card__note">' + esc(t.priceNote || "") + "</div>" +
+        '<div class="price-card__note" style="margin-top:8px">' + esc(t.datesLong || t.dates) + " · " + esc(t.duration) + "</div>" +
+        (t.rentals && t.rentals.length ? '<h3>Gear rental add-ons</h3>' +
           t.rentals.map(function (r) {
             return '<div class="addon"><div><div class="addon__name" id="lbl-' + r.id + '">' + esc(r.name) + '</div><div class="addon__price">+' + money(r.price) + '</div></div>' +
               '<label class="switch"><input type="checkbox" role="switch" data-rental="' + r.id + '" data-price="' + r.price + '" aria-labelledby="lbl-' + r.id + '"><span class="switch__track"></span></label></div>';
           }).join("") : "") +
         '<ul class="price-lines" data-lines></ul>' +
-        '<div class="price-total"><span>Total</span><span data-total>' + money(t.price) + "</span></div>" +
+        (t.rentals && t.rentals.length ? '<div class="price-total"><span>Total</span><span data-total>' + money(t.price) + "</span></div>" : "") +
         '<a class="btn btn--block" id="register" href="' + url(t.registerUrl || "#register") + '" data-reserve>Reserve your spot</a>' +
-        '<p class="price-card__fine">' + esc(t.statusNote || "") + "</p></div></aside>";
+        (t.spotsLeft ? '<p class="price-card__spots">' + esc(t.spotsLeft) + " spots left</p>" : "") +
+        '<p class="price-card__fine">' + esc(t.payNote || "") + ' <a href="#commitment">Plans change? See Your Commitment.</a></p>' + call + "</div></aside>";
     }
     h += "</div></div></div>";
 
@@ -481,11 +527,11 @@
     h += '<section class="section section--ink"><div class="container"><div class="center reveal"><p class="quote">“Connect to Allah by connecting to His creation.”</p>' +
       '<div class="btn-row btn-row--center" style="margin-top:36px">' +
       (past ? '<a class="btn" href="' + url("trips.html") + '">See upcoming trips</a>' : '<a class="btn" href="#reserve">Reserve your spot</a>') +
-      '<a class="btn btn--ghost" data-link="whatsapp" href="' + SITE.links.whatsapp + '">Join WhatsApp group</a></div></div></div></section>';
+      '<a class="btn btn--ghost" data-link="whatsapp" href="' + L.whatsapp + '">Join our WhatsApp community</a></div></div></div></section>';
 
     // Mobile reserve bar
     if (!past) {
-      h += '<div class="reserve-bar" data-reserve-bar aria-hidden="true"><div><div class="reserve-bar__label">' + esc(t.dates) + '</div><div class="reserve-bar__price" data-total>' + money(t.price) + "</div></div>" +
+      h += '<div class="reserve-bar" data-reserve-bar aria-hidden="true"><div><div class="reserve-bar__label">' + esc(t.dates) + (t.spotsLeft ? " · " + esc(t.spotsLeft) + " spots left" : "") + '</div><div class="reserve-bar__price" data-total>' + money(t.price) + "</div></div>" +
         '<a class="btn btn--sm" href="' + url(t.registerUrl || "#register") + '" tabindex="-1" data-reserve>Reserve</a></div>';
     }
     main.innerHTML = h;
@@ -576,7 +622,7 @@
     initFAQ();
     initGuides();
     initPacking();
-    initRefund();
+    initTestimonials();
     initAccordions();
     initVideos();
     initLightbox();

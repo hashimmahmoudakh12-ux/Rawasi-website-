@@ -17,14 +17,21 @@ assets/                 Images, video, logo, icons
 
 To preview locally, run `python3 -m http.server` and open http://localhost:8000. Double-clicking `index.html` also works.
 
-## Change the $800 price
+## Content source
 
-Open `data/trips.js`, find the `yosemite-2027` trip, and change `price: 800`. The trip card, the home page featured card, the price card and the live total all update.
-Gear rental prices are in the same object under `rentals`. The FAQ text that lists them is in `data/site.js` (`id: "gear"`).
+All text, prices, dates, policies, guide bios, testimonials and photos come from the old site, rawasiadventures.com.
+- `scrape/<page>.md`: the full text of every old page.
+- `scrape/image-manifest.md`: every old image, with its source URL, local path, alt text and page.
+- `assets/original/`: the original full-resolution files. The site itself uses the optimized copies in `assets/photos/` and `assets/people/`.
 
-## Add the registration / payment link
+## Change the price or spots left
 
-In `data/trips.js`, set `registerUrl: "https://your-payment-link"`. Every "Reserve your spot" button uses it. Any gear rentals the visitor switches on are added to the link as `?rentals=sleep,tent,pack`.
+Open `data/trips.js`, find the `yosemite-2027` trip, and change `price: 770` or `spotsLeft: 9`. The trip card, the home page featured card, the price card and the mobile reserve bar all update.
+The FAQ for each trip is in `data/site.js` under `faqGroups`.
+
+## Registration / payment link
+
+`registerUrl` in `data/trips.js` points to the Squarespace checkout product on the old site. If the domain moves off Squarespace, replace it with the new payment link.
 
 ## Add a new trip
 
@@ -38,28 +45,23 @@ In `data/trips.js`, set `registerUrl: "https://your-payment-link"`. Every "Reser
    - the `<title>`, `description`, `og:*`, `twitter:*` and `canonical` tags.
 3. Optionally, add the trip to the footer's "Trips" column (it is repeated in every page footer).
 
-## Swap images and videos
+## Images
 
-All placeholder images are in `assets/`. Replace a file with your own photo and **keep the same filename**. JPGs around 1800–2400px wide work well.
-
-| File | Used for |
+| Folder / file | Used for |
 |---|---|
-| `hero-sierra.jpg` | Home hero poster / fallback |
-| `hero.mp4` | Home hero background video (autoplays muted and loops). Keep it short and small, under 5 MB, H.264 |
-| `yosemite-hetch-hetchy.jpg`, `yosemite-winter-stars.jpg` | Yosemite card / trip hero |
-| `sierra-*.jpg` | Sierra 2026 card, gallery, home tiles |
-| `guide-*.jpg` | Guide portraits (square) |
-| `about-brotherhood.jpg`, `guide-training.jpg` | About page |
-| `og-image.jpg` | Social share preview (1200×630) |
-| `logo.svg`, `favicon.svg`, `apple-touch-icon.png`, `/favicon.ico` | Logo and icons |
+| `assets/photos/` | Trip, home and about photos (from the old site) |
+| `assets/people/` | Guide, founder and testimonial headshots |
+| `assets/rawasi-logo.png` | The real Rawasi logo (nav and footer) |
+| `favicon.ico`, `assets/favicon-32.png`, `assets/apple-touch-icon.png` | The old site's favicon (logo mark) |
+| `assets/og-image.jpg` | Social share fallback: the logo on the brand's dark color (1200×630) |
+| `assets/og-hetchhetchy.jpg`, `assets/og-emigrant.jpg` | Trip page share images |
 
 To use a background video on a trip page, set `heroVideo: "assets/your-video.mp4"` on the trip in `data/trips.js`.
-The YouTube film uses its id (`youtube: "XKM4X516dsk"`).
 
 ## Contact details and form
 
-- Phone and email: set `phone` and `email` in `data/site.js`. These replace the `[PHONE]` and `[EMAIL]` placeholders.
-- Form: create a free form at formspree.io and replace `YOUR_FORM_ID` in `contact.html`. Until you do, the form opens the visitor's email app instead.
+- Phone and email are set in `data/site.js` (`phone`, `phoneDisplay`, `email`).
+- Form: it opens the visitor's email app addressed to contact@rawasiadventures.com. To receive messages directly, create a form at formspree.io and set the form `action` in `contact.html` to its URL.
 
 ## Deploy
 
