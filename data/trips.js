@@ -41,6 +41,8 @@ window.RAWASI_TRIPS = [
     image: "assets/yosemite-hetch-hetchy.jpg",
     heroImage: "assets/yosemite-winter-stars.jpg",
     heroVideo: "", // optional, e.g. "assets/yosemite.mp4"
+    flyer: "assets/yosemite-2027-flyer.webp", // shown in a "Trip flyer" section on the trip page
+    flyerAlt: "Rawasi Backpacking Retreat flyer: Yosemite's Hetch Hetchy, January 15–18, 2027. Brothers only, limited to 15, gear and halal meals provided. With Qari Yaseen Mahmoud and Ibrahim Abdul-haqq Twist.",
     tags: ["Brothers only", "Ages 18+", "Beginner-friendly"],
     summary:
       "Step into the wild of Yosemite. Hike beneath towering granite walls, cross bridges under thundering waterfalls, camp deep in the valley, learn how to catch and cook food in the wild, and pray together under the winter stars, inshaAllah.",
