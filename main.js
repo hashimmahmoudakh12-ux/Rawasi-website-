@@ -424,6 +424,13 @@
       }).join("") + "</div></section>";
     }
 
+    if (t.flyer) {
+      h += '<section id="flyer" class="flyer reveal"><div class="flyer__text"><span class="eyebrow">Trip flyer</span><h2>Share it with a brother.</h2>' +
+        '<p class="muted">Send the flyer to someone who needs this trip. Tap to enlarge.</p>' +
+        '<div class="btn-row"><a class="btn btn--dark btn--sm" href="' + url(t.flyer) + '" download>Download flyer</a></div></div>' +
+        '<button class="flyer__img" data-lightbox aria-label="Enlarge trip flyer"><img src="' + url(t.flyer) + '" alt="' + esc(t.flyerAlt || t.title + " flyer") + '" loading="lazy" width="1600" height="2000"></button></section>';
+    }
+
     if (!past && t.highlights) {
       h += '<section><span class="eyebrow reveal">What you\'ll do</span><h2 class="reveal">' + esc(t.highlightsTitle || "Highlights") + '</h2><div class="highlights">' + t.highlights.map(function (x, i) {
         return '<div class="highlight reveal" style="--d:' + i * 0.05 + 's"><span class="highlight__icon gold">' + icon(x.icon, "icon") + "</span><h3>" + esc(x.title) + "</h3>" + (x.text ? "<p>" + esc(x.text) + "</p>" : "") + "</div>";

@@ -639,3 +639,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .faq-group + .faq-group { margin-top: 72px; }
 .faq-group__head { margin-bottom: 16px; }
 .founder-quote { font-family: var(--font-ar); font-size: clamp(22px, 4vw, 32px); color: var(--gold); direction: rtl; line-height: 1.8; }
+
+/* Trip flyer */
+.flyer { display: grid; gap: 24px; align-items: center; padding: 24px; border-radius: var(--r-lg); background: var(--bg-alt); }
+.flyer h2 { margin-bottom: 10px; }
+.flyer .btn-row { margin-top: 18px; }
+.flyer__img { display: block; width: 100%; max-width: 420px; margin: 0 auto; border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow-lg); transition: transform 0.5s var(--ease); }
+.flyer__img:hover { transform: scale(1.015); }
+.flyer__img img { width: 100%; height: auto; }
+@media (min-width: 700px) { .flyer { grid-template-columns: 1fr 1fr; padding: 36px; gap: 36px; } }

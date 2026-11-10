@@ -53,6 +53,8 @@ window.RAWASI_TRIPS = [
     heroVideo: "",
     tags: ["15 Muslim men, 18+", "4 days, 3 nights", "No experience needed"],
     cardSummary: "Guides, gear, halal meals and shuttle included. No experience needed.",
+    flyer: "assets/yosemite-2027-flyer.webp", // shown in a "Trip flyer" section on the trip page
+    flyerAlt: "Rawasi Backpacking Retreat flyer: Yosemite's Hetch Hetchy, January 15–18, 2027. Brothers only, limited to 15, gear and halal meals provided. With Qari Yaseen Mahmoud and Ibrahim Abdul-haqq Twist.",
     summary:
       "Join an adventurous group of 15 Muslim men backpacking deep into Yosemite's wilderness. Hike beneath towering granite walls, cross bridges past waterfalls and pray together under the winter stars. Come home with new brothers, new skills and a deeper connection to Allah's creation.",
     details: [
